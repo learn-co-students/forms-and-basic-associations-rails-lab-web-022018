@@ -3,9 +3,29 @@
 <%= form_for @song  do |f| %>
   <%= f.label :title %>
   <%= f.text_field :title %>
+  <%= f.label :artist_name %>
+  <%= f.text_field :artist_name %>
+  <!-- < %= f.label :notes_1 %> -->
+  <!-- < %= f.text_field :notes_1, Notes, :content,:id  %> -->
+  <%= f.collection_select :genre_id, Genre.all, :id, :name %>
   <br />
-
+  <input name='song[note_contents][]' id='song_notes_1'>
+  <input name='song[note_contents][]' id='song_notes_2'>
+  <br>
   <%= f.submit %>
 <% end %>
 
+##########View ->user can dropdown category
+< %= form_for @post do |f| %>
+  < %= f.collection_select :category, Category.all, :id, :name %>
+  < %= f.text_field :content %>
+< % end %>
 
+<!-- it "creates a song with an artist" do
+  visit '/songs/new'
+  fill_in :song_title, with: 'Little Earthquakes'
+  fill_in :song_artist_name, with: 'Tori Amos'
+  find('input[name="commit"]').click
+  expect(Song.last.artist.name).to eq 'Tori Amos'
+  expect(Artist.find_by(name: 'Tori Amos').songs.pluck(:title)).to include 'Little Earthquakes'
+end -->

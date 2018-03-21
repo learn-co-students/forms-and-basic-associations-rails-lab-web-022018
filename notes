@@ -1,0 +1,74 @@
+
+
+
+
+
+EXAMPLE Setting a category name for post
+
+############ app/models/post.rb
+class Post < ActiveRecord::Base
+   def category_name=(name) setter method #category_name= is called whenever a Post is initialized with a category_name fiel
+    self.category = Category.find_or_create_by(name: name)
+   end
+   def category_name
+    self.category.name end
+end
+############Controller :: expand Post.create(post_params) to
+Post.create({ { category_name: params[:post][:category_name],  content: params[:post][:content] }})
+class PostsController < ApplicationController
+  def create    Post.create(post_params)  end
+  private
+  def post_params params.require(:post).permit(:category_name, :content) end
+end
+##########View ->user can input category
+<%= form_for @post do |f| %>
+  <%= f.label :category_name %>
+  <%= f.text_field :category_name %> #Now the user can enter a category by name (instead of needing to look up its ID),
+  <%= f.text_field :content %>
+<% end %>
+##########View ->user can dropdown category
+<%= form_for @post do |f| %>
+  <%= f.collection_select :category, Category.all, :id, :name %>
+  <%= f.text_field :content %>
+<% end %>
+##########View -> create a new category or pick an existing one
+<%= form_for @post do |f| %>
+  <%= f.text_field :category_name, list: "categories_autocomplete" %>
+  <datalist id="categories_autocomplete">
+    <% Category.all.each do |category| %>
+      <option value="<%= category.name %>">
+    <% end %>
+  </datalist>
+  <textarea name="post[content]"></textarea>
+<% end %>
+
+*********let a user specify many different posts to categorize? ******
+#########view
+<%= form_for @category do |f| %>
+  <input name="category[post_ids][]">
+  <input name="category[post_ids][]">
+  <input name="category[post_ids][]">
+<% end %>
+######### app/models/category.rb When the form is submitted, your controller will have access to a post_ids param,
+class Category < ActiveRecord::Base
+   def post_ids=(ids)
+     ids.each do |id|
+       post = Post.find(id)
+       self.posts << post
+     end
+   end
+end
+####### app/controllers/categories_controller.rb #Now we can use the same wiring in the controller to set post_ids from params:
+class CategoriesController < ApplicationController
+  def create
+    Category.create(category_params)
+  end
+  private
+  def category_params
+    params.require(:category).permit(:name, post_ids: [])
+  end
+end
+
+Since we have defined this setter ourselves, Post.create does not try to fall back to setting category_name
+ through Active Record. You can think of #category_name= as intercepting the call to the database
+notes https://apidock.com/rails/ActionView/Helpers/FormOptionsHelper/collection_select
